@@ -769,7 +769,7 @@ function renderFilterBar(allCards) {
 
   bar.querySelectorAll(".chip").forEach(el => {
     el.onclick = () => {
-      const v = el.dataset.src || null;
+      const v = el.dataset.src ? el.dataset.src : null;
       state.filterSource = v;
       renderList();
     };
@@ -1174,7 +1174,7 @@ const SAMPLE_AG = {
   "shard_of_the_throne_ag": { name: "Shard of the Throne (Agenda)", text: "The elected player gains a Shard of the Throne relic fragment.", timing: "ELECT", elect: "player", source: "pok" },
   "seed_of_an_empire": { name: "Seed of an Empire", text: "For each player: if that player has more victory points than each other player, that player gains 1 victory point; if that player has fewer victory points than each other player, that player loses 1 victory point.", timing: "RESOLVE", source: "pok" },
   "galactic_crisis_pact": { name: "Galactic Crisis Pact", text: "Each player that has not voted gains 1 command token.", timing: "RESOLVE", source: "ds" },
-  "Articles_of_war": { name: "Articles of War", text: "The elected player removes 3 of their command tokens from the game.", timing: "ELECT", elect: "player", source: "ds" },
+  "articles_of_war": { name: "Articles of War", text: "The elected player removes 3 of their command tokens from the game.", timing: "ELECT", elect: "player", source: "ds" },
 };
 
 const SAMPLE_RL = {
