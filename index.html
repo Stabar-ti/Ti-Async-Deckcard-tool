@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TI4 Deck Editor</title>
+<style>
+/* ── Custom properties ─────────────────────────────────── */
+:root {
+  --bg:          #0d1117;
+  --surface:     #161b22;
+  --surface2:    #1e2530;
+  --border:      #30363d;
+  --border-hi:   #58a6ff40;
+  --accent:      #c8a255;
+  --accent-dim:  #c8a25520;
+  --text:        #e6edf3;
+  --text-muted:  #8b949e;
+  --text-dim:    #484f58;
+  --danger:      #f85149;
+  --danger-bg:   #f8514918;
+  --tag-ac:      #1f6feb40;
+  --tag-ac-text: #79c0ff;
+  --tag-ag:      #6e40c940;
+  --tag-ag-text: #d2a8ff;
+  --tag-rel:     #196c2e40;
+  --tag-rel-text:#56d364;
+  --tag-exp:     #c8a25530;
+  --tag-exp-text:#c8a255;
+  --tag-src-bg:  #30363d;
+  --tag-src-text:#8b949e;
+  --radius:      6px;
+  --header-h:    52px;
+  --tab-h:       40px;
+  --panel-min:   160px;
+  --panel-max:   600px;
+  --panel-init:  320px;
+}
+
+/* ── Reset / base ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI Variable", "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+
+/* ── Header ────────────────────────────────────────────── */
+#header {
+  height: var(--header-h);
+  min-height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  z-index: 10;
+}
+#logo { font-size: 1.1rem; }
+#logo .logo-ti { color: var(--accent); font-weight: 700; }
+#logo .logo-rest { color: var(--text-muted); font-weight: 400; }
+#header-spacer { flex: 1; }
+.hdr-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s, background .15s;
+}
+.hdr-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+.hdr-btn.accent { border-color: var(--accent); color: var(--accent); }
+
+/* ── Tab bar ───────────────────────────────────────────── */
+#tabbar {
+  height: var(--tab-h);
+  min-height: var(--tab-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+#tabbar::-webkit-scrollbar { height: 3px; }
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  color: var(--text-muted);
+  transition: color .15s, border-color .15s;
+  font-size: 13px;
+  user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 11px;
+  padding: 1px 7px;
+  color: var(--text-muted);
+}
+.tab.active .tab-badge { border-color: var(--accent); color: var(--accent); }
+#tabbar-empty {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ── Main area ─────────────────────────────────────────── */
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Left panel ────────────────────────────────────────── */
+#panel-left {
+  width: var(--panel-init);
+  min-width: var(--panel-min);
+  max-width: var(--panel-max);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* ── Resize handle ─────────────────────────────────────── */
+#resize-handle {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background .15s;
+  flex-shrink: 0;
+  z-index: 5;
+}
+#resize-handle:hover, #resize-handle.dragging { background: var(--accent); }
+
+/* ── Panel header ──────────────────────────────────────── */
+#panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 6px;
+  min-height: 36px;
+}
+#panel-deck-name { font-weight: 600; font-size: 13px; color: var(--text); }
+#panel-count { font-size: 12px; color: var(--text-muted); }
+
+/* ── Search ────────────────────────────────────────────── */
+#search-wrap { padding: 0 10px 8px; }
+#search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s;
+}
+#search:focus { border-color: var(--accent); }
+#search::placeholder { color: var(--text-dim); }
+
+/* ── Source filter chips ───────────────────────────────── */
+#filter-bar {
+  display: flex;
+  gap: 5px;
+  padding: 0 10px 8px;
+  flex-wrap: wrap;
+}
+#filter-bar.hidden { display: none; }
+.chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: border-color .15s, color .15s, background .15s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--border-hi); color: var(--text); }
+.chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* ── Selection toolbar ─────────────────────────────────── */
+#sel-toolbar {
+  display: flex;
+  gap: 5px;
+  padding: 0 10px 8px;
+}
+.tb-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 4px 9px;
+  font-size: 12px;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  transition: border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.tb-btn:hover { border-color: var(--border-hi); color: var(--text); }
+.tb-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Card list ─────────────────────────────────────────── */
+#card-list { flex: 1; overflow-y: auto; padding: 0 4px 4px; }
+.card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background .1s, border-color .1s;
+  margin-bottom: 2px;
+}
+.card-item:hover { background: var(--surface2); }
+.card-item.active { border-left-color: var(--accent); background: var(--accent-dim); }
+.card-item.excluded { opacity: .45; }
+.card-item.excluded .card-name { text-decoration: line-through; }
+.card-cb { margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+.card-info { min-width: 0; flex: 1; }
+.card-name { font-weight: 600; font-size: 13px; word-break: break-word; }
+.card-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.card-meta .excl-badge { color: var(--danger); }
+#list-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ── Right panel ───────────────────────────────────────── */
+#panel-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+#detail-area { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* ── Empty state ───────────────────────────────────────── */
+#detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-dim);
+  text-align: center;
+  gap: 12px;
+}
+#detail-empty .empty-icon { font-size: 3rem; }
+#detail-empty p { font-size: 14px; max-width: 260px; line-height: 1.5; }
+
+/* ── Card detail ───────────────────────────────────────── */
+#detail-card { display: none; }
+.detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.detail-title { font-size: 1.5rem; font-weight: 700; flex: 1; line-height: 1.3; }
+.excl-toggle {
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s, color .15s, background .15s;
+  white-space: nowrap;
+}
+.excl-toggle.excluded { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.excl-toggle:not(.excluded):hover { border-color: var(--danger); color: var(--danger); }
+.excl-toggle.excluded:hover { border-color: var(--border); color: var(--text-muted); background: var(--surface2); }
+
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tag {
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.tag-ac   { background: var(--tag-ac);  color: var(--tag-ac-text);  border-color: var(--tag-ac-text)40; }
+.tag-ag   { background: var(--tag-ag);  color: var(--tag-ag-text);  border-color: var(--tag-ag-text)40; }
+.tag-rel  { background: var(--tag-rel); color: var(--tag-rel-text); border-color: var(--tag-rel-text)40; }
+.tag-exp  { background: var(--tag-exp); color: var(--tag-exp-text); border-color: var(--tag-exp-text)40; }
+.tag-source { background: var(--tag-src-bg); color: var(--tag-src-text); }
+
+.detail-section { margin-bottom: 16px; }
+.detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.detail-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.detail-box.flavor { font-style: italic; color: var(--text-muted); }
+.detail-box.mono {
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* ── Output bar ────────────────────────────────────────── */
+#output-bar {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+#output-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+#output-header:hover { background: var(--surface2); }
+#output-chevron { margin-left: auto; color: var(--text-dim); transition: transform .2s; font-size: 11px; }
+#output-bar.open #output-chevron { transform: rotate(180deg); }
+#output-body { display: none; padding: 0 14px 12px; }
+#output-bar.open #output-body { display: block; }
+#output-ids {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+#output-ids:empty::before { content: "(no exclusions)"; color: var(--text-dim); }
+#output-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.out-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.out-btn:hover { border-color: var(--accent); color: var(--accent); }
+.out-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Import modal ──────────────────────────────────────── */
+#modal-backdrop {
+  position: fixed; inset: 0;
+  background: #00000080;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#modal-backdrop.open { display: flex; }
+#modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: min(480px, calc(100vw - 32px));
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+#modal h2 { font-size: 1.1rem; color: var(--text); }
+#modal p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.modal-field { display: flex; flex-direction: column; gap: 5px; }
+.modal-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.modal-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s;
+}
+.modal-input:focus { border-color: var(--accent); }
+#modal-textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 12px;
+}
+#modal-textarea::placeholder { color: var(--text-dim); }
+#modal-file-label { font-size: 12px; color: var(--text-muted); }
+#modal-file-label span {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+#modal-file-label span:hover { color: var(--text); }
+#modal-error {
+  font-size: 13px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  display: none;
+}
+#modal-error.visible { display: block; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 7px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.modal-btn:hover { border-color: var(--border-hi); color: var(--text); }
+.modal-btn.primary { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.modal-btn.primary:hover { background: var(--accent); color: var(--bg); }
+
+/* ── Toast ─────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px 18px;
+  font-size: 13px;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .22s, transform .22s;
+}
+#toast.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div id="logo">
+    <span class="logo-ti">TI4 </span><span class="logo-rest">Deck Editor</span>
+  </div>
+  <div id="header-spacer"></div>
+  <button class="hdr-btn accent" onclick="openImportModal()">⬆ Load JSON</button>
+  <button class="hdr-btn" onclick="loadSampleData()">Load Sample Data</button>
+</div>
+
+<!-- Tab bar -->
+<div id="tabbar">
+  <span id="tabbar-empty">No decks loaded — use "Load JSON" or "Load Sample Data"</span>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <!-- Left panel -->
+  <div id="panel-left">
+    <div id="panel-header">
+      <span id="panel-deck-name">—</span>
+      <span id="panel-count"></span>
+    </div>
+    <div id="search-wrap">
+      <input id="search" type="search" placeholder="Search name, text, or ID…" oninput="renderList()" />
+    </div>
+    <div id="filter-bar" class="hidden"></div>
+    <div id="sel-toolbar">
+      <button class="tb-btn" onclick="selectAllVisible()" title="Check all visible">☑ All</button>
+      <button class="tb-btn" onclick="deselectAllVisible()" title="Uncheck all visible">☐ None</button>
+      <button class="tb-btn danger" onclick="excludeSelected()" title="Exclude checked">✕ Exclude</button>
+      <button class="tb-btn" onclick="includeSelected()" title="Include checked">✓ Include</button>
+    </div>
+    <div id="card-list"></div>
+  </div>
+
+  <!-- Resize handle -->
+  <div id="resize-handle"></div>
+
+  <!-- Right panel -->
+  <div id="panel-right">
+    <div id="detail-area">
+      <!-- Empty state -->
+      <div id="detail-empty">
+        <div class="empty-icon">🃏</div>
+        <p>Select a card from the list to view its details here.</p>
+      </div>
+      <!-- Card detail -->
+      <div id="detail-card">
+        <div class="detail-title-row">
+          <div class="detail-title" id="detail-title"></div>
+          <button class="excl-toggle" id="detail-excl-btn" onclick="toggleExclude(state.activeCard)"></button>
+        </div>
+        <div class="tag-row" id="detail-tags"></div>
+        <div class="detail-section" id="detail-text-section">
+          <div class="detail-label">Card text</div>
+          <div class="detail-box" id="detail-text"></div>
+        </div>
+        <div class="detail-section" id="detail-flavor-section">
+          <div class="detail-label">Flavor</div>
+          <div class="detail-box flavor" id="detail-flavor"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Card ID</div>
+          <div class="detail-box mono" id="detail-id"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output bar -->
+    <div id="output-bar">
+      <div id="output-header" onclick="toggleOutput()">
+        <span>Excluded cards —</span>
+        <span id="output-count">0</span>
+        <span id="output-chevron">▲</span>
+      </div>
+      <div id="output-body">
+        <div id="output-ids"></div>
+        <div id="output-actions">
+          <button class="out-btn" onclick="copyIDList()">⧉ Copy ID list</button>
+          <button class="out-btn" onclick="copyBotCommand()">⧉ Copy bot command</button>
+          <button class="out-btn" onclick="downloadJSON()">⬇ Download filtered JSON</button>
+          <button class="out-btn danger" onclick="clearAllExclusions()">✕ Clear all exclusions</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div id="modal-backdrop">
+  <div id="modal">
+    <h2>Load Deck JSON</h2>
+    <p>Paste a deck JSON or load from a file. The deck will be added as a new tab.</p>
+    <div class="modal-field">
+      <label class="modal-label" for="modal-type">Deck type</label>
+      <select id="modal-type" class="modal-input" onchange="onModalTypeChange()">
+        <option value="ac">Action Cards</option>
+        <option value="agenda">Agendas</option>
+        <option value="relic">Relics</option>
+        <option value="explore">Exploration</option>
+        <option value="custom">Custom / Other</option>
+      </select>
+    </div>
+    <div class="modal-field" id="modal-name-field" style="display:none">
+      <label class="modal-label" for="modal-name">Custom deck name</label>
+      <input id="modal-name" class="modal-input" type="text" placeholder="My Custom Deck" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">
+        JSON — paste below or
+        <label id="modal-file-label"><span onclick="document.getElementById('modal-file').click()">browse a file</span></label>
+      </label>
+      <input id="modal-file" type="file" accept=".json" style="display:none" onchange="handleFileUpload(event)" />
+      <textarea id="modal-textarea" class="modal-input" placeholder='{"card_id": {"name": "Card Name", "text": "…", "timing": "ACTION", "source": "base"}}'></textarea>
+    </div>
+    <div id="modal-error"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeImportModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="doImport()">Load deck</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+/* ── Constants ───────────────────────────────────────── */
+const DECK_META = {
+  ac:      { label: "Action Cards", short: "AC",  tagClass: "tag-ac"  },
+  agenda:  { label: "Agendas",      short: "AG",  tagClass: "tag-ag"  },
+  relic:   { label: "Relics",       short: "RL",  tagClass: "tag-rel" },
+  explore: { label: "Exploration",  short: "EX",  tagClass: "tag-exp" },
+  custom:  { label: "Custom",       short: "CX",  tagClass: "tag-source" },
+};
+
+const SOURCE_DISPLAY = {
+  base:       "BASE",
+  pok:        "POK",
+  ds:         "DS",
+  te:         "TE",
+  uncharted:  "UNCHARTED",
+};
+
+function fmtSource(s) {
+  return SOURCE_DISPLAY[s] || String(s).toUpperCase();
+}
+function fmtTiming(t) {
+  return t ? t.replace(/_/g, " ") : "";
+}
+
+/* ── State ───────────────────────────────────────────── */
+const state = {
+  decks:      {},
+  activeDeck: null,
+  excluded:   {},
+  selected:   {},
+  activeCard: null,
+  filterSource: null,
+  outputOpen: false,
+};
+
+/* ── Helpers ─────────────────────────────────────────── */
+function activeDeck() {
+  return state.activeDeck ? state.decks[state.activeDeck] : null;
+}
+function activeDeckCards() {
+  const d = activeDeck();
+  return d ? d.cards : {};
+}
+
+/* ── Add deck ────────────────────────────────────────── */
+function addDeck(type, label, cardsObj) {
+  const id = type + "_" + Date.now();
+  const meta = DECK_META[type] || DECK_META.custom;
+  const deckLabel = label || meta.label;
+
+  // Normalise cardsObj: inject id field on each card
+  const cards = {};
+  for (const [k, v] of Object.entries(cardsObj)) {
+    cards[k] = { id: k, ...v };
+  }
+
+  state.decks[id] = { id, type, label: deckLabel, cards };
+  state.excluded[id] = new Set();
+  state.selected[id] = new Set();
+  state.activeDeck = id;
+  state.activeCard = null;
+  state.filterSource = null;
+
+  renderTabs();
+  renderList();
+  clearDetail();
+  updateOutputPanel();
+  return id;
+}
+
+/* ── Render tabs ─────────────────────────────────────── */
+function renderTabs() {
+  const bar = document.getElementById("tabbar");
+  const empty = document.getElementById("tabbar-empty");
+  const deckIds = Object.keys(state.decks);
+
+  if (deckIds.length === 0) {
+    empty.style.display = "";
+    while (bar.firstChild && bar.firstChild !== empty) bar.removeChild(bar.firstChild);
+    return;
+  }
+  empty.style.display = "none";
+
+  // Remove all tab elements (not #tabbar-empty)
+  [...bar.children].forEach(el => { if (el.id !== "tabbar-empty") el.remove(); });
+
+  deckIds.forEach(did => {
+    const deck = state.decks[did];
+    const total = Object.keys(deck.cards).length;
+    const excl  = state.excluded[did] ? state.excluded[did].size : 0;
+    const remaining = total - excl;
+    const tab = document.createElement("div");
+    tab.className = "tab" + (did === state.activeDeck ? " active" : "");
+    tab.dataset.id = did;
+    tab.innerHTML = `${escHtml(deck.label)} <span class="tab-badge">${remaining}/${total}</span>`;
+    tab.onclick = () => switchTab(did);
+    bar.insertBefore(tab, empty);
+  });
+}
+
+function switchTab(id) {
+  state.activeDeck = id;
+  state.activeCard = null;
+  state.filterSource = null;
+  document.getElementById("search").value = "";
+  renderTabs();
+  renderList();
+  clearDetail();
+  updateOutputPanel();
+}
+
+/* ── Visible cards ───────────────────────────────────── */
+function getVisibleCards() {
+  const deck = activeDeck();
+  if (!deck) return [];
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const src = state.filterSource;
+  return Object.values(deck.cards).filter(c => {
+    if (src && c.source !== src) return false;
+    if (q) {
+      const hay = ((c.name || "") + " " + (c.text || "") + " " + (c.id || "")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/* ── Render filter bar ───────────────────────────────── */
+function renderFilterBar(allCards) {
+  const bar = document.getElementById("filter-bar");
+  const sources = [...new Set(allCards.map(c => c.source).filter(Boolean))].sort();
+
+  if (sources.length < 2) {
+    bar.classList.add("hidden");
+    bar.innerHTML = "";
+    return;
+  }
+  bar.classList.remove("hidden");
+
+  const chips = [{ val: null, label: "All" }, ...sources.map(s => ({ val: s, label: fmtSource(s) }))];
+  bar.innerHTML = chips.map(ch =>
+    `<span class="chip${state.filterSource === ch.val ? " active" : ""}" data-src="${ch.val ?? ""}">${escHtml(ch.label)}</span>`
+  ).join("");
+
+  bar.querySelectorAll(".chip").forEach(el => {
+    el.onclick = () => {
+      const v = el.dataset.src || null;
+      state.filterSource = v;
+      renderList();
+    };
+  });
+}
+
+/* ── Render list ─────────────────────────────────────── */
+function renderList() {
+  const deck = activeDeck();
+  const listEl = document.getElementById("card-list");
+  const allCards = deck ? Object.values(deck.cards) : [];
+
+  renderFilterBar(allCards);
+
+  const visible = getVisibleCards();
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const sel  = state.selected[state.activeDeck]  || new Set();
+
+  // Panel header
+  const shown   = visible.length;
+  const exclCnt = excl.size;
+  document.getElementById("panel-deck-name").textContent = deck ? deck.label : "—";
+  document.getElementById("panel-count").textContent =
+    deck ? `${shown} shown · ${exclCnt} excluded` : "";
+
+  if (visible.length === 0) {
+    listEl.innerHTML = `<div id="list-empty">${deck ? "No cards match." : "No deck loaded."}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = visible.map(c => {
+    const isExcl = excl.has(c.id);
+    const isSel  = sel.has(c.id);
+    const isAct  = c.id === state.activeCard;
+    const meta   = [fmtTiming(c.timing), fmtSource(c.source), isExcl ? '<span class="excl-badge">excluded</span>' : ""]
+                     .filter(Boolean).join(" · ");
+    return `<div class="card-item${isExcl ? " excluded" : ""}${isAct ? " active" : ""}" data-id="${escAttr(c.id)}" onclick="onCardRowClick(event,'${escAttr(c.id)}')">
+  <input type="checkbox" class="card-cb" data-id="${escAttr(c.id)}" ${isSel ? "checked" : ""} onclick="onCheckboxClick(event,'${escAttr(c.id)}')" />
+  <div class="card-info">
+    <div class="card-name">${escHtml(c.name || c.id)}</div>
+    <div class="card-meta">${meta}</div>
+  </div>
+</div>`;
+  }).join("");
+}
+
+function onCardRowClick(e, id) {
+  if (e.target.classList.contains("card-cb")) return;
+  showDetail(id);
+}
+function onCheckboxClick(e, id) {
+  e.stopPropagation();
+  toggleSelect(id);
+}
+
+/* ── Show detail ─────────────────────────────────────── */
+function showDetail(id) {
+  state.activeCard = id;
+  const deck = activeDeck();
+  if (!deck) return;
+  const card = deck.cards[id];
+  if (!card) return;
+
+  document.getElementById("detail-empty").style.display = "none";
+  document.getElementById("detail-card").style.display  = "block";
+
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const isExcl = excl.has(id);
+
+  document.getElementById("detail-title").textContent = card.name || card.id;
+  document.getElementById("detail-id").textContent    = card.id;
+
+  // Tags
+  const meta = DECK_META[deck.type] || DECK_META.custom;
+  const tags = [`<span class="tag ${meta.tagClass}">${escHtml(meta.short)}</span>`];
+  if (card.source) tags.push(`<span class="tag tag-source">${escHtml(fmtSource(card.source))}</span>`);
+  if (card.timing) tags.push(`<span class="tag tag-source">${escHtml(fmtTiming(card.timing))}</span>`);
+  if (card.elect)  tags.push(`<span class="tag tag-source">${escHtml(card.elect.replace(/_/g," "))}</span>`);
+  document.getElementById("detail-tags").innerHTML = tags.join("");
+
+  // Text
+  const textSec = document.getElementById("detail-text-section");
+  const textEl  = document.getElementById("detail-text");
+  if (card.text) {
+    textSec.style.display = "";
+    textEl.textContent = card.text;
+  } else {
+    textSec.style.display = "none";
+  }
+
+  // Flavor
+  const flavorSec = document.getElementById("detail-flavor-section");
+  const flavorEl  = document.getElementById("detail-flavor");
+  if (card.flavor) {
+    flavorSec.style.display = "";
+    flavorEl.textContent = card.flavor;
+  } else {
+    flavorSec.style.display = "none";
+  }
+
+  // Exclude button
+  const btn = document.getElementById("detail-excl-btn");
+  if (isExcl) {
+    btn.textContent = "✓ Restore card";
+    btn.classList.add("excluded");
+  } else {
+    btn.textContent = "✕ Exclude card";
+    btn.classList.remove("excluded");
+  }
+
+  // Highlight active card in list
+  document.querySelectorAll(".card-item").forEach(el => {
+    el.classList.toggle("active", el.dataset.id === id);
+  });
+}
+
+/* ── Clear detail ────────────────────────────────────── */
+function clearDetail() {
+  state.activeCard = null;
+  document.getElementById("detail-empty").style.display = "flex";
+  document.getElementById("detail-card").style.display  = "none";
+}
+
+/* ── Toggle exclude ──────────────────────────────────── */
+function toggleExclude(id) {
+  if (!id || !state.activeDeck) return;
+  const excl = state.excluded[state.activeDeck];
+  if (excl.has(id)) excl.delete(id); else excl.add(id);
+  renderList();
+  if (state.activeCard === id) showDetail(id);
+  renderTabs();
+  updateOutputPanel();
+}
+
+/* ── Selection ───────────────────────────────────────── */
+function toggleSelect(id) {
+  const sel = state.selected[state.activeDeck];
+  if (!sel) return;
+  if (sel.has(id)) sel.delete(id); else sel.add(id);
+}
+function selectAllVisible() {
+  const sel = state.selected[state.activeDeck];
+  if (!sel) return;
+  getVisibleCards().forEach(c => sel.add(c.id));
+  renderList();
+}
+function deselectAllVisible() {
+  const sel = state.selected[state.activeDeck];
+  if (!sel) return;
+  getVisibleCards().forEach(c => sel.delete(c.id));
+  renderList();
+}
+function excludeSelected() {
+  const sel  = state.selected[state.activeDeck];
+  const excl = state.excluded[state.activeDeck];
+  if (!sel || !excl) return;
+  let n = 0;
+  sel.forEach(id => { excl.add(id); n++; });
+  sel.clear();
+  renderList();
+  renderTabs();
+  updateOutputPanel();
+  if (n) showToast(`Excluded ${n} card${n !== 1 ? "s" : ""}`);
+}
+function includeSelected() {
+  const sel  = state.selected[state.activeDeck];
+  const excl = state.excluded[state.activeDeck];
+  if (!sel || !excl) return;
+  let n = 0;
+  sel.forEach(id => { if (excl.has(id)) { excl.delete(id); n++; } });
+  sel.clear();
+  renderList();
+  renderTabs();
+  updateOutputPanel();
+  if (n) showToast(`Restored ${n} card${n !== 1 ? "s" : ""}`);
+}
+
+/* ── Output panel ────────────────────────────────────── */
+function updateOutputPanel() {
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const ids  = [...excl];
+  document.getElementById("output-count").textContent = ids.length;
+  document.getElementById("output-ids").textContent   = ids.join("\n");
+}
+function toggleOutput() {
+  state.outputOpen = !state.outputOpen;
+  document.getElementById("output-bar").classList.toggle("open", state.outputOpen);
+}
+function copyIDList() {
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const text = [...excl].join(",");
+  navigator.clipboard.writeText(text).then(() => showToast("ID list copied!"));
+}
+function copyBotCommand() {
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const ids  = [...excl].join(",");
+  const cmd  = `/game setup deck_exclude:${ids}`;
+  navigator.clipboard.writeText(cmd).then(() => showToast("Bot command copied!"));
+}
+function downloadJSON() {
+  const deck = activeDeck();
+  if (!deck) return;
+  const excl = state.excluded[state.activeDeck] || new Set();
+  const filtered = {};
+  for (const [k, v] of Object.entries(deck.cards)) {
+    if (!excl.has(k)) {
+      const out = { ...v };
+      delete out.id;   // remove injected field
+      filtered[k] = out;
+    }
+  }
+  const blob = new Blob([JSON.stringify(filtered, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (deck.label.replace(/\s+/g, "_").toLowerCase()) + "_filtered.json";
+  a.click();
+  showToast("Download started");
+}
+function clearAllExclusions() {
+  if (!state.activeDeck) return;
+  state.excluded[state.activeDeck] = new Set();
+  renderList();
+  renderTabs();
+  updateOutputPanel();
+  if (state.activeCard) showDetail(state.activeCard);
+  showToast("All exclusions cleared");
+}
+
+/* ── Import modal ────────────────────────────────────── */
+function openImportModal() {
+  document.getElementById("modal-textarea").value = "";
+  document.getElementById("modal-error").textContent = "";
+  document.getElementById("modal-error").classList.remove("visible");
+  document.getElementById("modal-type").value = "ac";
+  document.getElementById("modal-name").value = "";
+  onModalTypeChange();
+  document.getElementById("modal-backdrop").classList.add("open");
+}
+function closeImportModal() {
+  document.getElementById("modal-backdrop").classList.remove("open");
+}
+function onModalTypeChange() {
+  const isCustom = document.getElementById("modal-type").value === "custom";
+  document.getElementById("modal-name-field").style.display = isCustom ? "" : "none";
+}
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("modal-textarea").value = e.target.result;
+  };
+  reader.readAsText(file);
+  event.target.value = ""; // reset so same file can be reloaded
+}
+function doImport() {
+  const errEl  = document.getElementById("modal-error");
+  const raw    = document.getElementById("modal-textarea").value.trim();
+  const type   = document.getElementById("modal-type").value;
+  const custom = document.getElementById("modal-name").value.trim();
+
+  errEl.textContent = "";
+  errEl.classList.remove("visible");
+
+  if (!raw) {
+    errEl.textContent = "Please paste JSON or load a file.";
+    errEl.classList.add("visible");
+    return;
+  }
+
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) {
+    errEl.textContent = "Invalid JSON: " + e.message;
+    errEl.classList.add("visible");
+    return;
+  }
+
+  // Normalise to flat { id: cardObj }
+  let cardsMap = null;
+
+  if (Array.isArray(parsed)) {
+    // Array of card objects with id field
+    cardsMap = {};
+    for (const item of parsed) {
+      if (item && item.id) cardsMap[item.id] = item;
+    }
+  } else if (parsed && typeof parsed === "object") {
+    // Check for wrapped object
+    const WRAP_KEYS = ["cards", "actionCards", "agendas"];
+    const wrapKey = WRAP_KEYS.find(k => parsed[k] && typeof parsed[k] === "object" && !Array.isArray(parsed[k]));
+    if (wrapKey) {
+      cardsMap = parsed[wrapKey];
+    } else {
+      // Flat object: each value should be a card
+      // Heuristic: values are objects (not primitives)
+      const vals = Object.values(parsed);
+      if (vals.length > 0 && typeof vals[0] === "object") {
+        cardsMap = parsed;
+      }
+    }
+  }
+
+  if (!cardsMap || Object.keys(cardsMap).length === 0) {
+    errEl.textContent = "No cards found in the provided JSON.";
+    errEl.classList.add("visible");
+    return;
+  }
+
+  const meta  = DECK_META[type] || DECK_META.custom;
+  const label = type === "custom" && custom ? custom : meta.label;
+
+  addDeck(type, label, cardsMap);
+  closeImportModal();
+  showToast(`Loaded "${label}" — ${Object.keys(cardsMap).length} cards`);
+}
+
+/* ── Toast ───────────────────────────────────────────── */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("visible"), 2200);
+}
+
+/* ── Resize handle ───────────────────────────────────── */
+(function initResize() {
+  const handle = document.getElementById("resize-handle");
+  const left   = document.getElementById("panel-left");
+  let dragging = false;
+
+  handle.addEventListener("mousedown", e => {
+    dragging = true;
+    handle.classList.add("dragging");
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  });
+  document.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    const mainRect = document.getElementById("main").getBoundingClientRect();
+    let w = e.clientX - mainRect.left;
+    w = Math.max(160, Math.min(600, w));
+    left.style.width = w + "px";
+  });
+  document.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove("dragging");
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  });
+})();
+
+/* ── Modal close on backdrop click ──────────────────── */
+document.getElementById("modal-backdrop").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-backdrop")) closeImportModal();
+});
+
+/* ── Escape utilities ────────────────────────────────── */
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function escAttr(s) {
+  return String(s ?? "").replace(/'/g, "\\'");
+}
+
+/* ── Sample data ─────────────────────────────────────── */
+const SAMPLE_AC = {
+  "sabo": { name: "Sabotage", text: "Cancel an action card played by another player.", timing: "AGENDA_VOTE", source: "base" },
+  "divert_funding": { name: "Divert Funding", text: "Remove 2 tokens from any planet's exhausted status and return one of your technology cards to your hand.", timing: "ACTION", source: "base" },
+  "emergency_repairs": { name: "Emergency Repairs", text: "Repair all of your damaged units in a system.", timing: "ACTION", source: "base" },
+  "flank_speed": { name: "Flank Speed", text: "Apply +1 move value to all of your ships during this movement step.", timing: "MOVEMENT", source: "base" },
+  "political_favor": { name: "Political Favor", text: "Remove 1 token from the current agenda's current voting total and return it to its owner's reinforcements.", timing: "AGENDA_VOTE", source: "base" },
+  "warfare": { name: "Warfare", text: "During the action phase you may spend 1 strategy token to produce 2 units.", timing: "ACTION", source: "base" },
+  "lucky_shot": { name: "Lucky Shot", text: "Choose 1 ship in a system adjacent to a system that contains one of your ships. Destroy that ship.", timing: "ACTION", source: "base" },
+  "shield_prying": { name: "Shield Prying", text: "Choose 1 player. Exhaust your flagship. That player removes all tokens from a planet they control in a system that contains your flagship.", timing: "ACTION", source: "base" },
+  "ragh_s_call": { name: "Ragh's Call", text: "During a space battle, choose one of your opponent's non-fighter ships in the active system. That ship cannot contribute to the Anti-Fighter Barrage step of combat this round.", timing: "START_OF_COMBAT", source: "pok" },
+  "fires_of_the_empyrean": { name: "Fires of the Empyrean", text: "After you win a ground combat, produce 1 unit on that planet for free.", timing: "ACTION", source: "pok" },
+  "solar_flare": { name: "Solar Flare", text: "During movement, all of your ships can pass through supernova systems.", timing: "MOVEMENT", source: "pok" },
+  "unstable_planet": { name: "Unstable Planet", text: "Choose 1 non-home, non-legendary planet. Exhaust that planet and destroy all structures on it.", timing: "ACTION", source: "pok" },
+  "confounding_legal_text": { name: "Confounding Legal Text", text: "When an agenda is revealed, you may discard this card to choose a player. That player cannot vote on this agenda.", timing: "AGENDA_REVEALED", source: "ds" },
+  "orbital_drop": { name: "Orbital Drop", text: "Move 2 of your ground forces from a planet you control to any other planet in the same system.", timing: "ACTION", source: "ds" },
+  "frontier_exploration": { name: "Frontier Exploration", text: "Explore a frontier token in a system that contains 1 or more of your ships.", timing: "ACTION", source: "ds" },
+  "direct_order": { name: "Direct Order", text: "Exhaust this card; choose 1 of your units. That unit may use its SPACE CANNON ability as though it were your turn.", timing: "ANY", source: "ds" },
+};
+
+const SAMPLE_AG = {
+  "classified_document_leaks": { name: "Classified Document Leaks", text: "For each score that is tied, purge 1 scored secret objective.", timing: "ELECT", elect: "player", source: "base" },
+  "colonial_redistribution": { name: "Colonial Redistribution", text: "Destroy any number of structures on a planet controlled by the elected player.", timing: "ELECT", elect: "non_home_planet", source: "base" },
+  "core_mining": { name: "Core Mining", text: "Attach the 'Core Mining' relic fragment to the elected planet.", timing: "ELECT", elect: "hazardous_planet", source: "base" },
+  "conventions_of_war": { name: "Conventions of War", text: "For the remainder of the game, players cannot use BOMBARDMENT against planets that contain structures.", timing: "RESOLVE", source: "base" },
+  "demilitarized_zone": { name: "Demilitarized Zone", text: "Purge this card. Attach the demilitarized zone token to the elected planet.", timing: "ELECT", elect: "cultural_planet", source: "base" },
+  "emergency_session": { name: "Emergency Session", text: "Draw 1 secret objective; if it is the same phase as your current secret objectives, you may discard it and draw another.", timing: "RESOLVE", source: "base" },
+  "mutiny": { name: "Mutiny", text: "For each score on the elected objectives: return 1 control token to that player's reinforcements from a planet they control.", timing: "ELECT", elect: "player", source: "base" },
+  "shard_of_the_throne_ag": { name: "Shard of the Throne (Agenda)", text: "The elected player gains a Shard of the Throne relic fragment.", timing: "ELECT", elect: "player", source: "pok" },
+  "seed_of_an_empire": { name: "Seed of an Empire", text: "For each player: if that player has more victory points than each other player, that player gains 1 victory point; if that player has fewer victory points than each other player, that player loses 1 victory point.", timing: "RESOLVE", source: "pok" },
+  "galactic_crisis_pact": { name: "Galactic Crisis Pact", text: "Each player that has not voted gains 1 command token.", timing: "RESOLVE", source: "ds" },
+  "Articles_of_war": { name: "Articles of War", text: "The elected player removes 3 of their command tokens from the game.", timing: "ELECT", elect: "player", source: "ds" },
+};
+
+const SAMPLE_RL = {
+  "dynamo_core": { name: "Dynamo Core", text: "ACTION: Exhaust this card to produce 1 infantry in a system that contains a planet you control.", source: "base" },
+  "scepter_of_dominion": { name: "Scepter of Dominion", text: "When you would place 1 or more command tokens, you may place 1 fewer token.", source: "base" },
+  "stellar_converter": { name: "Stellar Converter", text: "ACTION: Exhaust this card and choose a non-home system. Destroy all units in that system. Remove all planet cards in that system from the game. Place a supernova token in that system.", source: "pok" },
+  "codex_of_oraculum": { name: "Codex of Oraculum", text: "At the start of the agenda phase, you may look at the top card of the agenda deck. If you do, place it on the top or bottom of the deck.", source: "pok" },
+  "maw_of_worlds": { name: "Maw of Worlds", text: "At the start of the strategy phase, you may exhaust this card to gain 1 commodity. Abilities and laws that would prevent you from doing so do not apply.", source: "pok" },
+  "shard_of_the_throne_rl": { name: "Shard of the Throne (Relic)", text: "At the end of the status phase, if you control Mecatol Rex, gain 1 victory point.", source: "pok" },
+  "nomad_flagship": { name: "The Nomad Flagship", text: "DEPLOY: After you produce units, you may place this card's plastic flagship in a system that contains one of your ships instead of paying its cost.", source: "pok" },
+  "absol_claw": { name: "Absol's Claw", text: "At the start of a ground combat on a planet you control, you may exhaust this card to place 1 mech on that planet.", source: "ds" },
+  "riftcanon": { name: "Rift Cannon", text: "ACTION: Exhaust this card and choose a system. For each planet in that system: destroy all structures on those planets.", source: "ds" },
+};
+
+function loadSampleData() {
+  // Only add if not already loaded (check by label)
+  const existingLabels = Object.values(state.decks).map(d => d.label);
+  let added = 0;
+  if (!existingLabels.includes("Action Cards (Sample)")) {
+    addDeck("ac",     "Action Cards (Sample)", SAMPLE_AC); added++;
+  }
+  if (!existingLabels.includes("Agendas (Sample)")) {
+    addDeck("agenda", "Agendas (Sample)",       SAMPLE_AG); added++;
+  }
+  if (!existingLabels.includes("Relics (Sample)")) {
+    addDeck("relic",  "Relics (Sample)",        SAMPLE_RL); added++;
+  }
+  if (added === 0) {
+    showToast("Sample data already loaded");
+  } else {
+    // Switch to first sample deck
+    const ids = Object.keys(state.decks);
+    if (ids.length) switchTab(ids[ids.length - 3] || ids[0]);
+    showToast(`Loaded ${added} sample deck${added !== 1 ? "s" : ""}`);
+  }
+}
+</script>
+</body>
+</html>
