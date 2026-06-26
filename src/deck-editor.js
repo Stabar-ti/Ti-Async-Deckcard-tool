@@ -190,6 +190,15 @@ function switchSlot(key) {
   renderCardBrowser();
   clearDetail();
   updateOutput();
+  setMobileView("left");
+}
+
+/* ── Mobile drill-down navigation (decks → cards → detail) ───
+   On wide screens #main shows all three panels side by side; the
+   data-view attribute only matters under the narrow-screen media query
+   in style.css, where it picks which single panel is shown full-width. */
+function setMobileView(view) {
+  document.getElementById("main").dataset.view = view;
 }
 
 /* ── Deck picker (left panel) ───────────────────────────── */
@@ -292,7 +301,10 @@ function selectDeck(alias) {
   renderCardBrowser();
   clearDetail();
   updateOutput();
-  if (alias) checkDeckForMissingCards(DECKS_DATA[alias], activeSlotDef().label);
+  if (alias) {
+    checkDeckForMissingCards(DECKS_DATA[alias], activeSlotDef().label);
+    setMobileView("mid");
+  }
 }
 
 /* ── Card browser (middle panel) ────────────────────────── */
@@ -482,6 +494,7 @@ const HIDDEN_FIELDS = [
 
 function showDetail(key) {
   state.activeCard = key;
+  setMobileView("right");
   const deck = activeDeck();
   const pool = activeCardPool();
   const card = pool[key];
@@ -521,6 +534,10 @@ function showDetail(key) {
     const imgEl = document.getElementById("detail-img");
     if (card.imageURL) { imgEl.src = card.imageURL; imgEl.style.display = ""; }
     else { imgEl.style.display = "none"; }
+    const detailCard = document.getElementById("detail-card");
+    const fieldsDiv = document.getElementById("detail-fields");
+    if (activeSlotDef().type === "relic") detailCard.insertBefore(fieldsDiv, imgEl);
+    else detailCard.insertBefore(imgEl, fieldsDiv);
 
     const order = ["text", "text1", "text2", "window", "mapText", "flavorText", "flavourText", "prerequisites", "attachmentId", "shortName", "initials", "homebrewReplacesID"];
     const skip = new Set([...HIDDEN_FIELDS, ...TAG_FIELDS]);
@@ -535,7 +552,7 @@ function showDetail(key) {
       if (seen.has(f) || skip.has(f) || card[f] === undefined || card[f] === null || card[f] === "") return;
       fieldsHtml.push(renderField(f, card[f]));
     });
-    document.getElementById("detail-fields").innerHTML = fieldsHtml.join("");
+    fieldsDiv.innerHTML = fieldsHtml.join("");
     document.getElementById("detail-id").textContent = card.alias || card.id || key;
   }
 
@@ -682,6 +699,7 @@ function resetAll() {
   state.activeCard = null;
   document.getElementById("search").value = "";
   renderRail(); renderPicker(); renderCardBrowser(); clearDetail(); updateOutput();
+  setMobileView("left");
   showToast("All slots reset");
 }
 

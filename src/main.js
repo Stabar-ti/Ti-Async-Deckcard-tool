@@ -49,6 +49,8 @@ function init() {
   renderCardBrowser();
   clearDetail();
   updateOutput();
+  setMobileView("left");
+  setBuilderView("left");
 }
 
 init();

@@ -361,6 +361,75 @@ body {
 .out-btn:hover { border-color: var(--accent); color: var(--accent); }
 .out-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
 
+/* ── Mobile / handheld layout ───────────────────────────────
+   Above the breakpoint, .mobile-back/.mtab/#builder-mobile-tabs stay
+   hidden and #main / #builder-main keep their normal 3-pane row layout.
+   Below it, the editor becomes a drill-down (decks → cards → detail) and
+   the builder becomes a 3-tab switcher, each driven by a data-view
+   attribute set from JS (setMobileView / setBuilderView) — see
+   deck-editor.js / deck-builder.js. */
+.mobile-back {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mobile-back:hover { border-color: var(--accent); color: var(--accent); }
+
+#builder-mobile-tabs { display: none; }
+.mtab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 7px 8px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+}
+.mtab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+@media (max-width: 860px) {
+  #header { flex-wrap: wrap; height: auto; min-height: var(--header-h); padding: 8px 10px; row-gap: 6px; }
+  #logo { font-size: 1rem; }
+  #header-spacer { flex-basis: 100%; height: 0; }
+  .hdr-btn { padding: 5px 9px; font-size: 12px; }
+
+  .slot-btn { min-width: 108px; padding: 0 12px; }
+
+  /* Editor: one panel full-width at a time, picked by #main[data-view] */
+  #main { position: relative; overflow: hidden; }
+  #panel-left, #panel-mid, #panel-right {
+    position: absolute; inset: 0; width: 100% !important; max-width: none; min-width: 0;
+    border-right: none; display: none;
+  }
+  #main[data-view="left"] #panel-left,
+  #main[data-view="mid"] #panel-mid,
+  #main[data-view="right"] #panel-right { display: flex; }
+  #resize-handle, #resize-handle2 { display: none; }
+  .mobile-back { display: inline-flex; }
+  #detail-area { padding: 14px; }
+
+  /* Deck builder: 3 tabs (Form / Cards / Result), picked by #builder-main[data-view] */
+  #builder-mobile-tabs { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  #builder-main { position: relative; flex-wrap: wrap; align-content: flex-start; }
+  #builder-left, #builder-mid, #builder-right {
+    position: absolute; inset: 0; top: 46px; width: 100% !important; min-width: 0;
+    border-right: none; display: none;
+  }
+  #builder-main[data-view="left"] #builder-left,
+  #builder-main[data-view="mid"] #builder-mid,
+  #builder-main[data-view="right"] #builder-right { display: flex; }
+  .resize-handle-static { display: none; }
+}
+
 /* Toast */
 #toast {
   position: fixed; bottom: 24px; right: 20px; background: var(--surface2); border: 1px solid var(--border);

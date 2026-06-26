@@ -38,6 +38,14 @@ const builderState = {
   bundle: [],   // decks already committed to this submission: {alias,name,type,description,source,cardIDs}
 };
 
+/* ── Mobile tab navigation (Form / Cards / Result) ──────────
+   Same idea as the editor's setMobileView: the data-view attribute only
+   matters under the narrow-screen media query in style.css. */
+function setBuilderView(view) {
+  document.getElementById("builder-main").dataset.view = view;
+  document.querySelectorAll(".mtab").forEach(el => el.classList.toggle("active", el.dataset.view === view));
+}
+
 function populateBuilderTypeSelect() {
   const sel = document.getElementById("builder-type");
   sel.innerHTML = BUILDER_TYPES.map(t => `<option value="${t.type}"${t.type === builderState.type ? " selected" : ""}>${escHtml(t.label)}</option>`).join("");

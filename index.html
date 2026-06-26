@@ -49,6 +49,7 @@
 
   <div id="panel-mid">
     <div class="browser-header">
+      <button class="mobile-back" onclick="setMobileView('left')">← Decks</button>
       <span id="browser-deck-name">—</span>
       <span id="browser-count"></span>
     </div>
@@ -76,6 +77,7 @@
       </div>
       <div id="detail-card">
         <div class="detail-title-row">
+          <button class="mobile-back" onclick="setMobileView('mid')">← Cards</button>
           <div class="detail-title" id="detail-title"></div>
           <button class="excl-toggle" id="detail-excl-btn" onclick="toggleExclude(state.activeCard)"></button>
         </div>
@@ -118,6 +120,11 @@
 </div>
 
 <div id="builder-main" style="display:none">
+  <div id="builder-mobile-tabs">
+    <button class="mtab" data-view="left" onclick="setBuilderView('left')">📝 Form</button>
+    <button class="mtab" data-view="mid" onclick="setBuilderView('mid')">🔍 Cards</button>
+    <button class="mtab" data-view="right" onclick="setBuilderView('right')">📦 Result</button>
+  </div>
   <div id="builder-left">
     <div class="picker-header">
       <div class="picker-title">New deck</div>
