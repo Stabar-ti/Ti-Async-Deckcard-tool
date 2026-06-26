@@ -1,0 +1,406 @@
+name: Sync AsyncTI4 deck data
+
+on:
+  schedule:
+    - cron:   '0 */12 * * *'   # every 12h UTC
+  workflow_dispatch:
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Set up Git config
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Clone source repo
+        run: |
+          git clone --depth 1 https://github.com/AsyncTI4/TI4_map_generator_bot temp-bot-repo
+
+      - name: Wipe previous bundle output
+        # Every run is a full mirror of the bot repo's current data, not an
+        # incremental merge. Deleting the old output first guarantees that
+        # removed/renamed cards or decks actually disappear here too,
+        # instead of lingering as stale files the build step never touches.
+        run: |
+          rm -rf public/data/cards public/data/decks.js
+          mkdir -p public/data/cards
+
+      - name: Build decks.js and public/data/cards/*.js bundles
+        run: |
+          python3 - << 'EOF'
+          import json, glob, os
+
+          SRC = 'temp-bot-repo/src/main/resources/data'
+          OUT_CARDS = 'public/data/cards'
+          os.makedirs(OUT_CARDS, exist_ok=True)
+
+          def load_all(dirname):
+            """Load every JSON file in a data subdirectory and merge into one list."""
+            items = []
+            for path in sorted(glob.glob(f'{SRC}/{dirname}/*.json')):
+              data = json.load(open(path, encoding='utf-8'))
+              if isinstance(data, list):
+                items.extend(data)
+              elif isinstance(data, dict):
+                items.append(data)
+            return items
+
+          # ── AC tag derivation (see .claude/AC_TAG_DERIVATION_SPEC.md) ──
+          # Determines, from the action card's own fields only, whether the
+          # bot fully automates it, surfaces it via a reminder/button
+          # ("integrated"), or leaves it to table-talk ("other"). Recomputed
+          # here at sync time since it only changes when AC data changes.
+          HANDLER_IDS = {
+            "abduction","abs","alliance_rider","ancient_trade_routes","arbitration",
+            "arch_expedition","armistice","arms_deal","artifact_hunters","artifact_research",
+            "assassin","betrayal","black_market_intel","black_market_raid","blitz",
+            "boarding_party","bounty","bribery","brutal_occupation","cache","chain_reaction",
+            "classified_weapons","compounding_interests","confounding","confusing","contingency",
+            "corruption","courageous","covert_operation","cripple","data_archive","decisive_victory",
+            "decoy","defectors","defense_installation","deflection","derelict_station",
+            "diplo_pressure","direct_hit","distinguished","divert_funding","economic_initiative",
+            "emergency_meeting","emergency_repairs","espionage","experimental","f_conscription",
+            "f_deployment","f_prototype","f_researched","false_flag","field_test","flank_speed",
+            "flawless_strategy","free_trade_network","freedom_fighters","fsb","ghost_ship",
+            "ghost_squad","hack","harness","heist","hidden_initiatives","hostile_world",
+            "impersonation","industrial_initiative","infiltrate","innovation","insider","insub",
+            "intrigue","investments","ixthian_gift","jamming","joint_research","liberation",
+            "liquidation","lost_treatise","lucky","mass_transference","meltdown","messiah",
+            "micrometeoroid_storm","mining_initiative","mobilization","mysterious_brokers",
+            "opportunists","oracle","overthrow","overtime","parley","pivot","plagiarize","plague",
+            "planetary_rigs","preparation","prisoners_of_war","privateers","probe",
+            "professional_archeologists","project_rider","propaganda_te","psionic_hammer",
+            "public_outrage","public_support","rally","reconstruction","reengineer","refabrication",
+            "refit","refugees","rehashed_debates","reinforcements","renegotiation","reparations",
+            "repeal","retrofit","reveal_prototype","revolution","sacrifice","salvage","scuttle",
+            "seize","seized_research","settlements","settlers","shrapnel_turrets","side_project",
+            "silence_space","simulacrum","skilled_retreat","smuggler_routes","special_session",
+            "spy","stability","stasis_haul","stolen_prototype","stranded_ship","strategic_focus",
+            "summit","survey","tactical","tf-atomize","tf-coerce","tf-converge","tf-create",
+            "tf-elevate","tf-engineer","tf-evolve","tf-flux","tf-genophage","tf-helix","tf-ignis",
+            "tf-irradiate","tf-lash","tf-locust","tf-magnificence","tf-manifest","tf-manipulate",
+            "tf-mutate1","tf-mutate2","tf-pax","tf-reflect","tf-reverse","tf-rise","tf-scarab",
+            "tf-starflare","tf-tartarus","tf-thieve","tf-transpose1","tf-transpose2","tf-unravel",
+            "tomb_raiders","truce","ubiquity","unexpected","unexpected_strategy","unstable","upgrade",
+            "uprising","veto","war_effort","war_machine","amendment",
+          }
+          AGENDA_RIDER_AUTOIDS = {"veto", "hack", "abs", "assassin", "insider"}
+          INTEGRATED_ALIASES = {
+            "counterstroke","coup","deadly_plot","reverse_engineer","rally","harness","disgrace",
+            "war_machine1","war_machine2","war_machine3","war_machine4","war_machine_ds",
+            "war_machine1_acd2","war_machine2_acd2","war_machine3_acd2","war_machine4_acd2",
+          }
+          TIMING_GROUP_RULES = [
+            ("action",          lambda w: w.strip() in ("Action", "ACTION", "Action:")),
+            ("combat_start",    lambda w: any(s in w for s in ["start of a combat","start of a space combat","start of a round of combat","start of a combat round"])),
+            ("combat_roll",     lambda w: any(s in w for s in ["roll","hit","BOMBARDMENT","SPACE CANNON","ANTI-FIGHTER BARRAGE","AFB"])),
+            ("combat_sustain",  lambda w: "SUSTAIN DAMAGE" in w),
+            ("combat_retreat",  lambda w: "retreat" in w or "Announce Retreats" in w),
+            ("combat_assign",   lambda w: "assign hits" in w or "before a hit is assigned" in w),
+            ("agenda_when",     lambda w: "When an agenda is revealed" in w),
+            ("agenda_after",    lambda w: "After an agenda is revealed" in w or "After the first agenda" in w),
+            ("agenda_vote",     lambda w: "cast votes" in w or "outcome would be resolved" in w or "after the speaker votes" in w),
+            ("invasion_start",  lambda w: "start of an invasion" in w),
+            ("invasion_commit", lambda w: "commits units to land" in w or "commit units to land" in w),
+            ("movement",        lambda w: "activate a system" in w or "Move Ships" in w or "before you move" in w or "move ships into" in w),
+            ("strategy_phase",  lambda w: "strategy phase" in w or "choose a strategy card" in w or "strategic action" in w),
+            ("status_phase",    lambda w: "status phase" in w or "ready planets" in w),
+            ("production",      lambda w: "PRODUCTION" in w or "produce a ship" in w or "produce ships" in w),
+            ("technology",      lambda w: "research a technology" in w or "research" in w),
+            ("transaction",     lambda w: "transaction" in w or "trade goods" in w),
+            ("turn_start",      lambda w: "start of your turn" in w),
+            ("turn_end",        lambda w: "end of your turn" in w or "end of a player's turn" in w),
+          ]
+
+          def derive_timing_group(card):
+            w = card.get("window") or ""
+            for name, test in TIMING_GROUP_RULES:
+              if test(w):
+                return name
+            if (card.get("phase") or "") == "Any" or "any time" in w.lower():
+              return "any_time"
+            return None
+
+          def derive_automation(card):
+            alias = card.get("alias") or ""
+            automation_id = card.get("automationID") or alias
+            text_lower = (card.get("text") or "").lower()
+            window = card.get("window") or ""
+            play_timing = card.get("playTiming") or ""
+
+            # Tag 1: automated
+            if "sabo" in alias or "shatter" in alias:
+              return "automated"
+            if automation_id in HANDLER_IDS:
+              return "automated"
+            if play_timing == "AGENDA_AFTER" and (
+              "predict aloud" in text_lower
+              or "rider" in alias
+              or automation_id in AGENDA_RIDER_AUTOIDS
+              or "smuggler" in automation_id
+            ):
+              return "automated"
+            if (
+              "After an agenda is revealed" in window
+              or "After the first agenda of this agenda phase is revealed" in window
+            ) and "predict aloud" in text_lower:
+              return "automated"
+
+            # Tag 2: integrated
+            if play_timing in ("AGENDA_WHEN", "AGENDA_AFTER"):
+              return "integrated"
+            if (
+              "When an agenda is revealed" in window
+              or "After an agenda is revealed" in window
+              or "After the first agenda of this agenda phase is revealed" in window
+            ):
+              return "integrated"
+            if automation_id == "deadly_plot":
+              return "integrated"
+            window_lower = window.lower()
+            if "combat" in window_lower or "roll" in window_lower or "hit" in window_lower:
+              return "integrated"
+            if alias in INTEGRATED_ALIASES or automation_id in INTEGRATED_ALIASES:
+              return "integrated"
+
+            # Tag 3: other
+            return "other"
+
+          def derive_ac_tags(items):
+            # "copies" (how many physical copies of this card, e.g. sabo1-4) is
+            # NOT derived here: it depends on which deck you're looking at, since
+            # the same name can appear under different aliases across expansions.
+            # The editor computes it per-deck at render time instead.
+            for c in items:
+              c["automation"] = derive_automation(c)
+              c["timingGroup"] = derive_timing_group(c)
+            return items
+
+          # ── Non-AC tag derivation (see .claude/NONAC_TAG_DERIVATION_SPEC.md) ──
+          AGENDA_RESOLVER_ALIASES = {
+            "absol_abolishment","absol_artifact","absol_censure","absol_checks",
+            "absol_constitution","absol_measures","absol_miscount","absol_seeds",
+            "abolishment","arms_reduction","articles_war","artifact",
+            "censure","checks","cladenstine","constitution","conventions",
+            "crisis","defense_act","disarmament","economic_equality",
+            "execution","grant_reallocation","incentive","little_omega_artifact",
+            "minister_antiquities","miscount","mutiny","nexus","plowshares",
+            "rearmament","redistribution","regulations","rep_govt","revolution",
+            "sanctions","schematics","secret","seed_empire","shared_research",
+            "standardization","travel_ban","unconventional",
+            "voice_of_the_council","warrant","wormhole_recon","wormhole_research",
+          }
+
+          def derive_vote_type(target):
+            t = target or ""
+            tl = t.lower()
+            if tl.startswith("for/against"): return "for_against"
+            if tl.startswith("elect player") or tl.startswith("elect a player"): return "elect_player"
+            if tl.startswith("elect planet") or tl.startswith("elect non-home planet"): return "elect_planet"
+            if tl.startswith("elect law"): return "elect_law"
+            if tl.startswith("elect strategy card") or tl.startswith("strategy card"): return "elect_strategy"
+            if tl.startswith("elect public objective"): return "elect_objective"
+            if tl.startswith("elect"): return "elect_other"
+            if t == "Edict": return "edict"
+            return "special"
+
+          def derive_agenda_tags(items):
+            for c in items:
+              alias = (c.get("alias") or "").lower()
+              c["automation"] = "automated" if alias in AGENDA_RESOLVER_ALIASES else "integrated"
+              c["voteType"] = derive_vote_type(c.get("target"))
+              c["agendaType"] = c.get("type")
+            return items
+
+          EXHAUST_RELICS = {"titanprototype", "absol_jr", "circletofthevoid", "endurance_steroids", "the_incursion_gate"}
+          INTEGRATED_RELIC_ALIASES = {
+            "absol_luxarchtreatise", "shard", "absol_shardofthethrone1", "absol_shardofthethrone2",
+            "absol_shardofthethrone3", "obsidian", "absol_obsidian",
+          }
+
+          def derive_relic_tags(items):
+            for c in items:
+              is_fake = str(c.get("isFakeRelic", "")).lower() == "true"
+              c["isFakeRelic"] = is_fake
+              if is_fake:
+                c["relicKind"] = "fragment"
+                c["automation"] = None
+                continue
+              c["relicKind"] = "relic"
+              text = c.get("text") or ""
+              alias = c.get("alias") or ""
+              has_action_text = "Action:" in text or "ACTION:" in text
+              if alias == "enigmaticdevice" or alias in EXHAUST_RELICS:
+                c["automation"] = "automated"
+              elif has_action_text and "starchart" not in alias:
+                c["automation"] = "automated"
+              elif alias in INTEGRATED_RELIC_ALIASES or "At the start of the agenda phase" in text:
+                c["automation"] = "integrated"
+              else:
+                c["automation"] = "other"
+
+              tl = text.lower()
+              if "action:" in tl:
+                c["relicActionType"] = "component_action"
+              elif "exhaust this card" in tl:
+                c["relicActionType"] = "exhaust"
+              elif "purge this card" in tl:
+                c["relicActionType"] = "purge"
+              elif "victory point" in tl:
+                c["relicActionType"] = "vp"
+              else:
+                c["relicActionType"] = "passive"
+            return items
+
+          def derive_explore_tags(items):
+            for c in items:
+              c["automation"] = "automated"
+            return items
+
+          SO_STATUS_TRACKED = set("""
+            push_boundaries outer_rim make_history infrastructure protect_border
+            corner unify_colonies develop revolutionize diversify master_science
+            monument golden_age expand_borders subdue research_outposts brain_trust
+            intimidate lead galvanize trade_routes centralize_trade amass_wealth
+            build_defenses massive_cities lost_outposts ancient_monuments
+            engineer_marvel deep_space vast_territories raise_fleet command_armada
+            sway_council manipulate_law conquer supremacy vast_reserves
+            distant_lands pem sai syc sb otf mtm hrm eh dp dhw dfat
+            te ose mrm mlp mp lsc fwm fsn gamf ans btgk ctr csl eap faa fc
+          """.split())
+          SO_STATUS_TRACKED |= {f"{a}_omegaphase" for a in list(SO_STATUS_TRACKED)}
+          SO_ACTION_INTEGRATED = {"uf", "dtgs", "sar", "btv", "dts", "dyp", "pe", "bam", "dp"}
+
+          def derive_so_phase(phase):
+            p = (phase or "").lower()
+            if p in ("status", "action", "agenda", "strategy"):
+              return p
+            return p or None
+
+          def derive_so_tags(items):
+            for c in items:
+              alias = (c.get("alias") or "").lower()
+              if alias in SO_STATUS_TRACKED or alias in SO_ACTION_INTEGRATED:
+                c["automation"] = "integrated"
+              else:
+                c["automation"] = "other"
+              c["soPhase"] = derive_so_phase(c.get("phase"))
+            return items
+
+          PO_STAGE1 = set("""
+            push_boundaries outer_rim make_history infrastructure corner
+            develop diversify monument expand_borders research_outposts
+            intimidate lead trade_routes amass_wealth build_defenses
+            lost_outposts engineer_marvel deep_space raise_fleet sway_council
+            conquer supremacy vast_reserves distant_lands
+          """.split())
+          PO_STAGE2 = set("""
+            centralize_trade galvanize manipulate_law golden_age subdue
+            massive_cities unify_colonies control_borderlands ancient_monuments
+            command_armada revolutionize brain_trust vast_territories
+            master_science protect_border
+          """.split())
+          PO_OMEGA = set("""
+            corner_omegaphase galvanize_omegaphase manipulate_law_omegaphase golden_age_omegaphase
+            centralize_trade_omegaphase revolutionize_omegaphase master_science_omegaphase subdue_omegaphase
+            brain_trust_omegaphase distant_lands_omegaphase push_boundaries_omegaphase ancient_monuments_omegaphase
+            vast_territories_omegaphase intimidate_omegaphase massive_cities_omegaphase become_legend_omegaphase
+            command_armada_omegaphase supremacy_omegaphase control_borderlands_omegaphase
+          """.split())
+          PO_TRACKED = PO_STAGE1 | PO_STAGE2 | PO_OMEGA
+
+          def derive_po_phase(phase):
+            p = (phase or "").lower()
+            if p in ("status", "status phase"): return "status"
+            if p == "omega": return "omega"
+            if p in ("action phase", "action"): return "action"
+            return p or None
+
+          def derive_po_tags(items):
+            for c in items:
+              alias = (c.get("alias") or "").lower()
+              c["automation"] = "integrated" if alias in PO_TRACKED else "other"
+              points = c.get("points")
+              c["poStage"] = "1" if points == 1 else ("2" if points == 2 else (str(points) if points is not None else None))
+              c["poPhase"] = derive_po_phase(c.get("phase"))
+            return items
+
+          def write_card_bundle(varname, filename, key_field, items):
+            """Write a public/data/cards/<filename>.js file exporting a
+            global const keyed by the card's id/alias field."""
+            obj = {}
+            for c in items:
+              k = c.get(key_field)
+              if k:
+                obj[k] = c
+            path = f'{OUT_CARDS}/{filename}.js'
+            with open(path, 'w', encoding='utf-8') as out:
+              out.write(f'// Auto-generated by sync-asyncti4.yml — do not edit by hand.\n')
+              out.write(f'const {varname} = ')
+              json.dump(obj, out, separators=(',', ':'), ensure_ascii=False)
+              out.write(';\n')
+            print(f'Wrote {path}: {len(obj)} cards')
+
+          # type -> (directory, output filename, JS var name, primary key field)
+          CARD_TYPES = {
+            'action_card':       ('action_cards',      'action_cards',      'CARDS_ACTION_CARDS',      'alias'),
+            'agenda':            ('agendas',            'agendas',           'CARDS_AGENDAS',           'alias'),
+            'relic':             ('relics',             'relics',            'CARDS_RELICS',            'alias'),
+            'explore':           ('explores',           'explores',         'CARDS_EXPLORES',          'id'),
+            'technology':        ('technologies',       'technologies',      'CARDS_TECHNOLOGIES',      'alias'),
+            'secret_objective':  ('secret_objectives',  'secret_objectives', 'CARDS_SECRET_OBJECTIVES', 'alias'),
+            'public_objective':  ('public_objectives',  'public_objectives', 'CARDS_PUBLIC_OBJECTIVES', 'alias'),
+            'event':             ('events',             'events',            'CARDS_EVENTS',            'alias'),
+          }
+
+          DERIVERS = {
+            'action_card': derive_ac_tags,
+            'agenda': derive_agenda_tags,
+            'relic': derive_relic_tags,
+            'explore': derive_explore_tags,
+            'secret_objective': derive_so_tags,
+            'public_objective': derive_po_tags,
+          }
+
+          for deck_type, (srcdir, filename, varname, keyfield) in CARD_TYPES.items():
+            items = load_all(srcdir)
+            for c in items:
+              c['deckType'] = deck_type
+              if c.get('actualSource'):
+                c['source'] = c['actualSource']
+            deriver = DERIVERS.get(deck_type)
+            if deriver:
+              items = deriver(items)
+            write_card_bundle(varname, filename, keyfield, items)
+
+          # Named decks — one DECKS object keyed by deck alias, merged from every file.
+          decks = {}
+          for path in sorted(glob.glob(f'{SRC}/decks/*.json')):
+            for d in json.load(open(path, encoding='utf-8')):
+              alias = d.get('alias')
+              if alias:
+                decks[alias] = d
+
+          os.makedirs('public/data', exist_ok=True)
+          with open('public/data/decks.js', 'w', encoding='utf-8') as out:
+            out.write('// Auto-generated by sync-asyncti4.yml — do not edit by hand.\n')
+            out.write('const DECKS = ')
+            json.dump(decks, out, separators=(',', ':'), ensure_ascii=False)
+            out.write(';\n')
+          print(f'Wrote public/data/decks.js: {len(decks)} decks')
+          EOF
+
+      - name: Commit & push changes
+        run: |
+          git add public/data/decks.js public/data/cards
+          git commit -m "🤖 Sync AsyncTI4 deck + card data" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git \
+                   HEAD:${{ github.ref_name }}
