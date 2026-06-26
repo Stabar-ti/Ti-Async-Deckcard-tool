@@ -705,3 +705,33 @@ function resetAll() {
 
 initResizeHandle("resize-handle", "panel-left", 220, 620);
 initResizeHandle("resize-handle2", "panel-mid", 220, 620);
+
+/* ── Swipe navigation: card list ↔ card detail (mobile) ──────
+   Only active on narrow screens (where #main shows one panel at a
+   time — see the data-view rules in style.css). Swiping left from the
+   card list opens the currently-selected card's detail; swiping right
+   from detail goes back to the card list. */
+(function initSwipeNav() {
+  const main = document.getElementById("main");
+  let startX = 0, startY = 0, tracking = false;
+  main.addEventListener("touchstart", e => {
+    const view = main.dataset.view;
+    if (window.innerWidth > 860 || e.touches.length !== 1 || (view !== "mid" && view !== "right")) {
+      tracking = false;
+      return;
+    }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+  main.addEventListener("touchend", e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const view = main.dataset.view;
+    if (dx < 0 && view === "mid" && state.activeCard) setMobileView("right");
+    else if (dx > 0 && view === "right") setMobileView("mid");
+  }, { passive: true });
+})();
