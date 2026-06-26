@@ -435,6 +435,12 @@ body {
   #detail-area { padding: 14px; }
   #panel-mid, #panel-right { touch-action: pan-y; }
 
+  /* iOS Safari auto-zooms on focus into any text input/textarea/select
+     with a computed font-size under 16px, and doesn't reliably zoom back
+     out on blur. Keeping every text field at 16px+ here means there's
+     nothing for it to zoom into in the first place. */
+  #search, #builder-search, .modal-input { font-size: 16px; }
+
   /* Deck builder: 3 tabs (Form / Cards / Result), picked by #builder-main[data-view] */
   #builder-mobile-tabs { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
   #builder-main { position: relative; flex-wrap: wrap; align-content: flex-start; }
