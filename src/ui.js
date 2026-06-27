@@ -54,10 +54,12 @@ function switchMode(mode) {
   document.getElementById("rail").style.display = mode === "editor" ? "flex" : "none";
   document.getElementById("main").style.display = mode === "editor" ? "flex" : "none";
   document.getElementById("builder-main").style.display = mode === "builder" ? "flex" : "none";
+  document.getElementById("cardmaker-main").style.display = mode === "cardmaker" ? "flex" : "none";
   ["btn-save-config", "btn-load-config", "btn-reset-all"].forEach(id => {
     document.getElementById(id).style.display = mode === "editor" ? "" : "none";
   });
   if (mode === "builder") renderBuilder();
+  if (mode === "cardmaker") renderCardMaker();
 }
 
 /* ── Issues banner (missing decks/cards) ─────────────────── */
