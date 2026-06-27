@@ -5,6 +5,14 @@ on:
     - cron:   '0 */12 * * *'   # every 12h UTC
   workflow_dispatch:
 
+# The default GITHUB_TOKEN is read-only unless a repo's "Workflow
+# permissions" setting is changed to read/write — explicit permissions
+# here override that default for this workflow regardless, which is the
+# standard fix for the push step failing with "Permission ... denied to
+# github-actions[bot]" / 403.
+permissions:
+  contents: write
+
 jobs:
   sync-data:
     runs-on: ubuntu-latest
