@@ -208,14 +208,19 @@ function renderBuilderValidation() {
     : `<div class="validation-ok">✓ Ready to add to submission</div>`;
 }
 
+/* Key order matches the bot's own data/decks/*.json files exactly
+   (alias, name, type, description, cardIDs, source) — JSON parsing
+   doesn't care about key order, but some repo-side tooling/PR diffing
+   does string/line comparisons, so this is a real mirror, not just a
+   field-set match. */
 function buildCurrentDeckObject() {
   return {
     alias: builderState.alias.trim(),
     name: builderState.name.trim(),
     type: builderState.type,
     description: builderState.description.trim(),
-    source: builderState.source.trim() || "homebrew",
     cardIDs: [...builderState.cardIds],
+    source: builderState.source.trim() || "homebrew",
   };
 }
 
