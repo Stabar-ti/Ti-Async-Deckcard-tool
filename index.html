@@ -14,6 +14,7 @@
   <div id="mode-tabs">
     <button class="mode-tab active" data-mode="editor" onclick="switchMode('editor')">🗂 Editor</button>
     <button class="mode-tab" data-mode="builder" onclick="switchMode('builder')">🛠 Deck Builder</button>
+    <button class="mode-tab" data-mode="cardmaker" onclick="switchMode('cardmaker')">🃏 Card Maker</button>
   </div>
   <span id="data-banner"></span>
   <div id="header-spacer"></div>
@@ -197,6 +198,66 @@
   </div>
 </div>
 
+<div id="cardmaker-main" style="display:none">
+  <div id="cardmaker-mobile-tabs">
+    <button class="mtab" data-view="left" onclick="setCardMakerView('left')">📝 Form</button>
+    <button class="mtab" data-view="mid" onclick="setCardMakerView('mid')">👁 Preview</button>
+    <button class="mtab" data-view="right" onclick="setCardMakerView('right')">📦 Batch</button>
+  </div>
+  <div id="cardmaker-left">
+    <div class="picker-header">
+      <div class="picker-title">New card</div>
+      <div class="picker-sub">Design one card at a time, then add it to the batch. The batch can mix card types — each type downloads as its own JSON file, matching the bot's per-type data files.</div>
+    </div>
+    <label class="builder-field">
+      <span class="builder-label">Card type</span>
+      <select id="cardmaker-type" class="modal-input" onchange="onCardMakerTypeChange()"></select>
+    </label>
+    <div id="cardmaker-form"></div>
+    <div id="cardmaker-validation"></div>
+    <div class="output-actions" style="padding:0 10px 10px">
+      <button class="out-btn" onclick="addCurrentCardToBatch()">＋ Add to batch</button>
+    </div>
+  </div>
+
+  <div class="resize-handle-static"></div>
+
+  <div id="cardmaker-mid">
+    <div class="browser-header">
+      <span>Live preview</span>
+    </div>
+    <div id="cardmaker-preview-area">
+      <div class="detail-title-row">
+        <div class="detail-title" id="cardmaker-preview-title">—</div>
+      </div>
+      <div class="tag-row" id="cardmaker-preview-tags"></div>
+      <div id="cardmaker-preview-fields"></div>
+      <div class="detail-section">
+        <div class="detail-label">Card ID</div>
+        <div class="detail-box mono" id="cardmaker-preview-id">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="resize-handle-static"></div>
+
+  <div id="cardmaker-right">
+    <div class="browser-header">
+      <span>This batch</span>
+      <span id="cardmaker-batch-count">0</span>
+    </div>
+    <div id="cardmaker-batch-list"></div>
+    <div id="cardmaker-output">
+      <div class="detail-label">JSON preview (grouped by output file)</div>
+      <pre id="cardmaker-json-preview" class="detail-box mono"></pre>
+      <div class="output-actions">
+        <button class="out-btn" onclick="downloadCardMakerBatch()">⬇ Download batch JSON</button>
+        <button class="out-btn danger" onclick="resetCardMaker()">✕ Clear Card Maker</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 
@@ -213,6 +274,7 @@
 <script src="src/ui.js"></script>
 <script src="src/deck-editor.js"></script>
 <script src="src/deck-builder.js"></script>
+<script src="src/card-maker.js"></script>
 <script src="src/main.js"></script>
 </body>
 </html>

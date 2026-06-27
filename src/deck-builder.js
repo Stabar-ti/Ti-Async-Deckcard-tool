@@ -43,7 +43,7 @@ const builderState = {
    matters under the narrow-screen media query in style.css. */
 function setBuilderView(view) {
   document.getElementById("builder-main").dataset.view = view;
-  document.querySelectorAll(".mtab").forEach(el => el.classList.toggle("active", el.dataset.view === view));
+  document.querySelectorAll("#builder-mobile-tabs .mtab").forEach(el => el.classList.toggle("active", el.dataset.view === view));
 }
 
 function populateBuilderTypeSelect() {

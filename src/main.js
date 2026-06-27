@@ -44,6 +44,7 @@ function init() {
     : "No deck data yet — waiting for first sync run (.github/workflows/sync-asyncti4.yml)";
   loadFromLocalStorage();
   loadBuilderDraft();
+  loadCardMakerDraft();
   renderRail();
   renderPicker();
   renderCardBrowser();
@@ -51,6 +52,7 @@ function init() {
   updateOutput();
   setMobileView("left");
   setBuilderView("left");
+  setCardMakerView("left");
 }
 
 init();
