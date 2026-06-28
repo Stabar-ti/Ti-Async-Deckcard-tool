@@ -1,0 +1,165 @@
+201;We are multiplying;!unit 3 fighter
+!unit neutral 1 destroyer;CURRENT;MOVED;YES;ONCE|styx;you thought you gained something?;!vp -1 The joke;CURRENT;CONTROLLED;YES;ONCE_PER_PLAYER|203;Are you sure you want to take the price? you can still return;!unit neutral 2 fighter;CURRENT;CONTROLLED;NO;ONCE|205;The fracture, A lost place, there where demons come from. Legends. You will go top, you can go bottom.
+Will you accept the temptation to go up?;!choice
+accept:!tg -2
+reject:!tg +2;CURRENT;CONTROLLED;YES;ONCE_PER_PLAYER|207;You went the wrong or right way you cannot figure it out. However it is enough to erect a triumph monument.;Should only trigger once....
+!vp 1 Triumph monument;CURRENT;CONTROLLED;YES;ONCE_PER_PLAYER|209;The fracture, A lost place, there where demons come from. Legends. You will go top, you can go bottom.
+Will you accept the temptation to go up?;!choice
+accept:!tg -2
+reject:!tg +2;CURRENT;CONTROLLED;YES;ONCE_PER_PLAYER|211;Are you sure you want to take the price? you can still return;!unit neutral 2 fighter;CURRENT;CONTROLLED;NO;ONCE|401;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2;CURRENT;CONTROLLED;NO;ONCE|403;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|kkita;A poison cloud, some of your troops suffocate;!removeunit 1 infantry @kkita;CURRENT;CONTROLLED;YES;ONCE|405;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2;CURRENT;CONTROLLED;NO;ONCE|407;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|phylob;A poison cloud, some of your troops suffocate;!removeunit 1 infantry @phylob;CURRENT;CONTROLLED;YES;ONCE|409;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2;CURRENT;CONTROLLED;NO;ONCE|411;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|norrk;A poison cloud, some of your troops suffocate;!removeunit 1 infantry @norrk;CURRENT;CONTROLLED;YES;ONCE|413;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2;CURRENT;CONTROLLED;NO;ONCE|415;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|grywonb;A poison cloud, some of your troops suffocate;!removeunit 1 infantry @grywonb;CURRENT;CONTROLLED;YES;ONCE|417;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2;CURRENT;CONTROLLED;NO;ONCE|419;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|tralloc;A poison cloud, some of your troops suffocate;!removeunit 1 infantry @tralloc;CURRENT;CONTROLLED;YES;ONCE|421;You took effort, to gain access;!comms -3
+!tg +3
+!so 1;CURRENT;CONTROLLED;NO;ONCE|423;The battle is done. You can salvage the remains of teh battle and some of that happened before. There is just enough to make something out of it. ;!choice
+roll a d2 on 1 accept on 2 reject
+accept:!unit 1 destroyer @rep
+reject:!unit 1 cruiser @rep;CURRENT;SPACE_BATTLE;NO;ONCE_PER_PLAYER|altor;A poison cloud, some of your troops suffocate;!removeunit 1 infantry altor @altor;CURRENT;CONTROLLED;YES;ONCE|501;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 501 805
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|502;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @ikatena
+!removeunit neutral 4 infantry @ikathena
+!unit 1 spacedock @ikatena
+!unit 4 infantry @ikathena;CURRENT;CONTROLLED;NO;ONCE|506;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 506 813
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|507;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @mordaiii
+!removeunit neutral 2 infantry @mordaiii
+!unit 1 spacedock @mordaiii
+!unit 2 infantry @mordaiii;CURRENT;CONTROLLED;NO;ONCE|511;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 511 821
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|512;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @darien
+!removeunit neutral 4 infantry @darien
+!unit 1 spacedock @darien
+!unit 4 infantry @darien;CURRENT;CONTROLLED;NO;ONCE|516;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 516 829
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|517;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @ordinian
+!removeunit neutral 3 infantry @ordinian
+!unit 1 spacedock @ordinian
+!unit 3 infantry @ordinian;CURRENT;CONTROLLED;NO;ONCE|521;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 521 836
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|522;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @mez
+!removeunit neutral 4 infantry @rep
+!unit 1 spacedock @mez
+!unit 2 infantry @rep
+!unit 2 infantry @mez;CURRENT;CONTROLLED;NO;ONCE|526;A weird nebula. close to home you expected a planetary system you passed through on your way to the edge.....;!swap 526 845
+!tactic +1;CURRENT;CONTROLLED;YES;ONCE|527;You finally arrive in your system and the people on teh planets realise in fear you're homr;!removeunit neutral 1 spacedock @naazir
+!removeunit neutral 1 mech @naazir
+!removeunit neutral 3 infantry @rokha
+!unit 1 spacedock @naazir
+!unit 1 mech @naazir
+!unit 3 infantry @rokha;CURRENT;CONTROLLED;NO;ONCE|606;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|612;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|618;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|624;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|630;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|636;You need to get home as fast as you can!;!tactic +1;CURRENT;CONTROLLED;NO;ONCE|704;Add least the space force recognises your signature. They quickly change flag.;!unit 1 carrier @502
+!unit 1 dreadnought @502
+!unit 4 fighter @502
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|707;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 1 carrier @507
+!unit neutral 1 dreadnought @507
+!unit neutral 1 cruiser @507
+!unit neutral 2 fighter @507
+!unit neutral 1 spacedock @mordaiii
+!unit neutral 2 infantry @mordaiii;CURRENT;MOVED;NO;ONCE|711;Add least the space force recognises your signature. They quickly change flag.;!unit 1 carrier @507
+!unit 1 dreadnought @507
+!unit 1 cruiser @507
+!unit 2 fighter @507
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|714;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 2 carrier @512
+!unit neutral 1 destroyer @512
+!unit neutral 4 fighter @512
+!unit neutral 1 spacedock @darien
+!unit neutral 4 infantry @darien;CURRENT;MOVED;NO;ONCE|718;Add least the space force recognises your signature. They quickly change flag.;!unit 2 carrier @512
+!unit 1 destroyer @512
+!unit 4 fighter @512
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|721;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 1 carrier @517
+!unit neutral 1 dreadnought @517
+!unit neutral 1 cruiser @517
+!unit neutral 2 fighter @527
+!unit neutral 1 spacedock @ordinian
+!unit neutral 3 infantry @ordinian;CURRENT;MOVED;NO;ONCE|725;Add least the space force recognises your signature. They quickly change flag.;!unit 1 carrier @517
+!unit 1 dreadnought @517
+!unit 1 cruiser @517
+!unit 2 fighter @527
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|728;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 1 carrier @522
+!unit neutral 1 destroyer @522
+!unit neutral 1 dreadnought @522
+!unit neutral 2 fighter @522
+!unit neutral 1 spacedock @mez
+!unit neutral 4 infantry @rep;CURRENT;MOVED;NO;ONCE|732;Add least the space force recognises your signature. They quickly change flag.;!unit 1 carrier @522
+!unit 1 destroyer @522
+!unit 1 dreadnought @522
+!unit 2 fighter @522
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|735;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 2 carrier @527
+!unit neutral 1 destroyer @527
+!unit neutral 2 fighter @527
+!unit neutral 1 spacedock @naazir
+!unit neutral 1 mech @naazir
+!unit neutral 3 infantry @rokha;CURRENT;MOVED;NO;ONCE|739;Add least the space force recognises your signature. They quickly change flag.;!unit 2 carrier @527
+!unit 1 destroyer @527
+!unit 2 fighter @527
+!fleet +3;CURRENT;CONTROLLED;NO;ONCE|742;You move into the nebula a precious sight and your sensors now get in range of your homesystem. It is in disarray without a proper leader...;!unit neutral 1 carrier @502
+!unit neutral 1 dreadnought @502
+!unit neutral 4 fighter @502
+!unit neutral 1 spacedock @ikatena
+!unit neutral 4 infantry @ikathena;CURRENT;MOVED;NO;ONCE|echo;Let's add some mines / some value (ACCEPT) Or maybe some POLITICAL BUILDINGS (REJECT);!choice
+accept:!token positiveres @tralloc
+reject:!token positiveinf @tralloc;CURRENT;CONTROLLED;YES;ONCE|805;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 1 carrier @502
+!removeunit neutral 1 dreadnought @502
+!removeunit neutral 4 fighter @502;CURRENT;CONTROLLED;NO;ONCE|myrwater;You land, in some old ruins you find a star map of a lost wormhole.;!token  wheta @705;CURRENT;CONTROLLED;YES;ONCE|808;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE|813;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 1 carrier @507
+!removeunit neutral 1 dreadnought @507
+!removeunit neutral 1 cruiser @507
+!removeunit neutral 2 fighter @507;CURRENT;CONTROLLED;NO;ONCE|archonvail;You land, in some old ruins you find a star map of a lost wormhole.;!token  custom_eronous_whiota @712;CURRENT;CONTROLLED;YES;ONCE|816;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE|faunus;Let's add some mines / some value (ACCEPT) Or maybe some POLITICAL BUILDINGS (REJECT);!choice
+accept:!token positiveres @tralloc
+reject:!token positiveinf @tralloc;CURRENT;CONTROLLED;YES;ONCE|821;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 2 carrier @512
+!removeunit neutral 1 destroyer @512
+!removeunit neutral 4 fighter @512;CURRENT;CONTROLLED;NO;ONCE|vorhal;You land, in some old ruins you find a star map of a lost wormhole.;!token custom_eronous_whtheta 719;CURRENT;CONTROLLED;YES;ONCE|824;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE|829;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 1 carrier @517
+!removeunit neutral 1 dreadnought @517
+!removeunit neutral 1 cruiser @517
+!removeunit neutral 2 fighter @527;CURRENT;CONTROLLED;NO;ONCE|wellon;You land, in some old ruins you find a star map of a lost wormhole.;!token  wheta @726;CURRENT;CONTROLLED;YES;ONCE|832;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE|prism;Let's add some mines / some value (ACCEPT) Or maybe some POLITICAL BUILDINGS (REJECT);!choice
+accept:!token positiveres @tralloc
+reject:!token positiveinf @tralloc;CURRENT;CONTROLLED;YES;ONCE|837;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 1 carrier @522
+!removeunit neutral 1 destroyer @522
+!removeunit neutral 1 dreadnought @522
+!removeunit neutral 2 fighter @522;CURRENT;CONTROLLED;NO;ONCE|veyhrune;You land, in some old ruins you find a star map of a lost wormhole.;!token  custom_eronous_whiota @732;CURRENT;CONTROLLED;YES;ONCE|840;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE|845;You see two paths. You need to go home! you find two cashes a red or blue you can only choose one, will you accept to choose the red one?;!choice
+!tactic +2
+accept:!tg +2
+reject:!ac 2
+!removeunit neutral 2 carrier @527
+!removeunit neutral 1 destroyer @527
+!removeunit neutral 2 fighter @527;CURRENT;CONTROLLED;NO;ONCE|vent;You land, in some old ruins you find a star map of a lost wormhole.;!token  wheta @740;CURRENT;CONTROLLED;YES;ONCE|848;You actually returned, you want to start over again?;!vp 1 Return to Start and gain...;CURRENT;CONTROLLED;NO;ONCE
