@@ -605,7 +605,7 @@ function buildCommand() {
 const REMOVE_CMD_BUILDERS = {
   action_card:               id => `/custom remove_ac_from_game ac_id:${id}`,
   agenda:                    id => `/custom remove_agenda_from_game agenda_id:${id}`,
-  relic:                     id => `/custom remove_relic_from_game relic_id:${id}`,
+  relic:                     id => `/custom remove_relic_from_game relic:${id}`,
   secret_objective:          id => `/custom remove_so_from_game so_id:${id}`,
   public_stage_1_objective:  id => `/custom remove_po_from_game public_id:${id}`,
   public_stage_2_objective:  id => `/custom remove_po_from_game public_id:${id}`,
